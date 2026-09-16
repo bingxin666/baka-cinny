@@ -81,7 +81,7 @@ import { MemberPowerTag, StateEvent } from '../../../../types/matrix/room';
 import { PowerIcon } from '../../../components/power';
 import colorMXID from '../../../../util/colorMXID';
 import { getPowerTagIconSrc } from '../../../hooks/useMemberPowerTag';
-import { MessageTranslation, getMessagePlainText } from '../../translation';
+import { MessageTranslation, getMessagePlainText, isMessageTranslationShown } from '../../translation';
 import { activeTranslationsAtom, translationAtom } from '../../../state/translation';
 
 export type ReactionHandler = (keyOrMxc: string, shortcode: string) => void;
@@ -94,21 +94,35 @@ export const MessageTranslateItem = as<
   }
 >(({ mEvent, onClose, ...props }, ref) => {
   const { t } = useTranslation();
+  const mx = useMatrixClient();
+  const settings = useAtomValue(translationAtom);
   const [activeMap, setActiveMap] = useAtom(activeTranslationsAtom);
   const eventId = mEvent.getId();
-  const isActive = eventId ? !!activeMap[eventId] : false;
   const canTranslate = !!getMessagePlainText(mEvent);
+
+  const isOwnMessage = (() => {
+    const sender = mEvent.getSender();
+    const me = mx.getUserId();
+    return !!sender && !!me && sender === me;
+  })();
+
+  const isShown = isMessageTranslationShown(eventId, activeMap, {
+    auto: settings.translationAuto,
+    isOwnMessage,
+    enabled: settings.translationEnabled,
+  });
 
   const handleToggle = () => {
     if (!eventId) return;
+    // Explicitly force show/hide, overriding auto.
     setActiveMap({
       ...activeMap,
-      [eventId]: !isActive,
+      [eventId]: !isShown,
     });
     onClose?.();
   };
 
-  if (!canTranslate) return null;
+  if (!canTranslate || !settings.translationEnabled) return null;
 
   return (
     <MenuItem
@@ -120,7 +134,7 @@ export const MessageTranslateItem = as<
       ref={ref}
     >
       <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-        {isActive ? t('message.show_original') : t('message.translate')}
+        {isShown ? t('message.show_original') : t('message.translate')}
       </Text>
     </MenuItem>
   );

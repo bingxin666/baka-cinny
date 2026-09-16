@@ -48,7 +48,7 @@ export function About({ requestClose }: AboutProps) {
                   <Box direction="Column" gap="100">
                     <Box gap="100" alignItems="End">
                       <Text size="H3">Cinny Baka</Text>
-                      <Text size="T200">v1.0.0+baka</Text>
+                      <Text size="T200">v4.12.7+baka</Text>
                     </Box>
                     <Text>{t('about.baka_tagline')}</Text>
                   </Box>

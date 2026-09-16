@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Box, color, Icon, Icons, Spinner, Text, config } from 'folds';
 import { MatrixEvent } from 'matrix-js-sdk';
 import { useTranslation } from 'react-i18next';
 import { useAtom, useAtomValue } from 'jotai';
 import { AsyncStatus } from '../../hooks/useAsyncCallback';
+import { useMatrixClient } from '../../hooks/useMatrixClient';
 import {
   activeTranslationsAtom,
   translationAtom,
@@ -23,31 +24,53 @@ type MessageTranslationProps = {
   mEvent: MatrixEvent;
 };
 
+/**
+ * Inline translation under a message.
+ * - Manual: toggled from the message menu (activeTranslationsAtom true/false)
+ * - Auto: when translationAuto is on, every incoming text message from others
+ *   is translated unless the user explicitly chose "Show original" (false).
+ */
 export function MessageTranslation({ mEvent }: MessageTranslationProps) {
   const { t } = useTranslation();
+  const mx = useMatrixClient();
   const settings = useAtomValue(translationAtom);
-  const [activeMap, setActiveMap] = useAtom(activeTranslationsAtom);
+  const activeMap = useAtomValue(activeTranslationsAtom);
   const { result, status, error, translate } = useMessageTranslate();
   const body = getMessagePlainText(mEvent);
   const eventId = mEvent.getId();
 
-  useEffect(() => {
-    if (!settings.translationEnabled || !settings.translationAuto || !eventId || !body) return;
-    if (activeMap[eventId]) return;
-    setActiveMap((prev) => (prev[eventId] ? prev : { ...prev, [eventId]: true }));
-  }, [settings.translationEnabled, settings.translationAuto, eventId, body, activeMap, setActiveMap]);
+  const isOwnMessage = useMemo(() => {
+    const sender = mEvent.getSender();
+    const me = mx.getUserId();
+    return !!sender && !!me && sender === me;
+  }, [mEvent, mx]);
 
-  const active = eventId ? !!activeMap[eventId] : false;
+  // true = force show, false = force hide, undefined = follow auto
+  const manualState = eventId ? activeMap[eventId] : undefined;
+
+  const shouldAutoTranslate =
+    settings.translationEnabled &&
+    settings.translationAuto &&
+    !!body &&
+    !!eventId &&
+    !isOwnMessage &&
+    manualState !== false;
+
+  const shouldShow =
+    settings.translationEnabled &&
+    !!body &&
+    !!eventId &&
+    (manualState === true || shouldAutoTranslate);
 
   useEffect(() => {
-    if (active && body) {
+    if (shouldShow && body) {
       translate(body);
     }
-  }, [active, body, translate]);
+  }, [shouldShow, body, translate]);
 
   if (!settings.translationEnabled) return null;
   if (!body || !eventId) return null;
-  if (!active) return null;
+  if (!shouldShow) return null;
 
   return (
     <Box
@@ -81,5 +104,18 @@ export function MessageTranslation({ mEvent }: MessageTranslationProps) {
     </Box>
   );
 }
+
+/** Used by the message menu: decide whether translation is currently shown. */
+export const isMessageTranslationShown = (
+  eventId: string | undefined,
+  activeMap: Record<string, boolean>,
+  options: { auto: boolean; isOwnMessage: boolean; enabled: boolean }
+): boolean => {
+  if (!options.enabled || !eventId) return false;
+  const manual = activeMap[eventId];
+  if (manual === true) return true;
+  if (manual === false) return false;
+  return options.auto && !options.isOwnMessage;
+};
 
 export type { TranslateResult };

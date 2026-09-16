@@ -1,6 +1,6 @@
 {
   "name": "cinny",
-  "version": "1.0.0+baka",
+  "version": "4.12.7+baka",
   "description": "Yet another matrix client — Baka fork with i18n and message translation",
   "main": "index.js",
   "type": "module",
