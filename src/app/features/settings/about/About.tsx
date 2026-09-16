@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Text, IconButton, Icon, Icons, Scroll, Button, config, toRem } from 'folds';
+import { useTranslation } from 'react-i18next';
 import { Page, PageContent, PageHeader } from '../../../components/page';
 import { SequenceCard } from '../../../components/sequence-card';
 import { SequenceCardStyle } from '../styles.css';
@@ -13,6 +14,7 @@ type AboutProps = {
 };
 export function About({ requestClose }: AboutProps) {
   const mx = useMatrixClient();
+  const { t } = useTranslation();
 
   return (
     <Page>
@@ -20,7 +22,7 @@ export function About({ requestClose }: AboutProps) {
         <Box grow="Yes" gap="200">
           <Box grow="Yes" alignItems="Center" gap="200">
             <Text size="H3" truncate>
-              About
+              {t('about.title')}
             </Text>
           </Box>
           <Box shrink="No">
@@ -45,16 +47,16 @@ export function About({ requestClose }: AboutProps) {
                 <Box direction="Column" gap="300">
                   <Box direction="Column" gap="100">
                     <Box gap="100" alignItems="End">
-                      <Text size="H3">Cinny</Text>
-                      <Text size="T200">v4.12.7</Text>
+                      <Text size="H3">Cinny Baka</Text>
+                      <Text size="T200">v1.0.0+baka</Text>
                     </Box>
-                    <Text>Yet another matrix client.</Text>
+                    <Text>{t('about.baka_tagline')}</Text>
                   </Box>
 
                   <Box gap="200" wrap="Wrap">
                     <Button
                       as="a"
-                      href="https://github.com/cinnyapp/cinny"
+                      href="https://github.com/bingxin666/baka-cinny"
                       rel="noreferrer noopener"
                       target="_blank"
                       variant="Secondary"
@@ -63,7 +65,7 @@ export function About({ requestClose }: AboutProps) {
                       radii="300"
                       before={<Icon src={Icons.Code} size="100" filled />}
                     >
-                      <Text size="B300">Source Code</Text>
+                      <Text size="B300">{t('about.source_code')}</Text>
                     </Button>
                     <Button
                       as="a"
@@ -76,13 +78,13 @@ export function About({ requestClose }: AboutProps) {
                       radii="300"
                       before={<Icon src={Icons.Heart} size="100" filled />}
                     >
-                      <Text size="B300">Support</Text>
+                      <Text size="B300">{t('about.support')}</Text>
                     </Button>
                   </Box>
                 </Box>
               </Box>
               <Box direction="Column" gap="100">
-                <Text size="L400">Options</Text>
+                <Text size="L400">{t('about.options')}</Text>
                 <SequenceCard
                   className={SequenceCardStyle}
                   variant="SurfaceVariant"
@@ -90,8 +92,8 @@ export function About({ requestClose }: AboutProps) {
                   gap="400"
                 >
                   <SettingTile
-                    title="Clear Cache & Reload"
-                    description="Clear all your locally stored data and reload from server."
+                    title={t('about.clear_cache')}
+                    description={t('about.clear_cache_desc')}
                     after={
                       <Button
                         onClick={() => clearCacheAndReload(mx)}
@@ -101,14 +103,14 @@ export function About({ requestClose }: AboutProps) {
                         radii="300"
                         outlined
                       >
-                        <Text size="B300">Clear Cache</Text>
+                        <Text size="B300">{t('about.clear_cache_btn')}</Text>
                       </Button>
                     }
                   />
                 </SequenceCard>
               </Box>
               <Box direction="Column" gap="100">
-                <Text size="L400">Credits</Text>
+                <Text size="L400">{t('about.credits')}</Text>
                 <SequenceCard
                   className={SequenceCardStyle}
                   variant="SurfaceVariant"
@@ -149,85 +151,6 @@ export function About({ requestClose }: AboutProps) {
                           target="_blank"
                         >
                           Apache 2.0
-                        </a>
-                        .
-                      </Text>
-                    </li>
-                    <li>
-                      <Text size="T300">
-                        The{' '}
-                        <a
-                          href="https://github.com/mozilla/twemoji-colr"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          twemoji-colr
-                        </a>{' '}
-                        font is ©{' '}
-                        <a href="https://mozilla.org/" target="_blank" rel="noreferrer noopener">
-                          Mozilla Foundation
-                        </a>{' '}
-                        used under the terms of{' '}
-                        <a
-                          href="http://www.apache.org/licenses/LICENSE-2.0"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          Apache 2.0
-                        </a>
-                        .
-                      </Text>
-                    </li>
-                    <li>
-                      <Text size="T300">
-                        The{' '}
-                        <a
-                          href="https://twemoji.twitter.com"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          Twemoji
-                        </a>{' '}
-                        emoji art is ©{' '}
-                        <a
-                          href="https://twemoji.twitter.com"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          Twitter, Inc and other contributors
-                        </a>{' '}
-                        used under the terms of{' '}
-                        <a
-                          href="https://creativecommons.org/licenses/by/4.0/"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          CC-BY 4.0
-                        </a>
-                        .
-                      </Text>
-                    </li>
-                    <li>
-                      <Text size="T300">
-                        The{' '}
-                        <a
-                          href="https://material.io/design/sound/sound-resources.html"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          Material sound resources
-                        </a>{' '}
-                        are ©{' '}
-                        <a href="https://google.com" target="_blank" rel="noreferrer noopener">
-                          Google
-                        </a>{' '}
-                        used under the terms of{' '}
-                        <a
-                          href="https://creativecommons.org/licenses/by/4.0/"
-                          target="_blank"
-                          rel="noreferrer noopener"
-                        >
-                          CC-BY 4.0
                         </a>
                         .
                       </Text>

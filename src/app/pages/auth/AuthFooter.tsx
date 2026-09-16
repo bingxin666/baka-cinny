@@ -11,11 +11,11 @@ export function AuthFooter() {
       <Text
         as="a"
         size="T300"
-        href="https://github.com/ajbura/cinny/releases"
+        href="https://github.com/bingxin666/baka-cinny/releases"
         target="_blank"
         rel="noreferrer"
       >
-        v4.12.7
+        v1.0.0+baka
       </Text>
       <Text as="a" size="T300" href="https://twitter.com/cinnyapp" target="_blank" rel="noreferrer">
         Twitter

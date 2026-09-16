@@ -36,6 +36,8 @@ import { MatrixEvent, Room } from 'matrix-js-sdk';
 import { Relations } from 'matrix-js-sdk/lib/models/relations';
 import classNames from 'classnames';
 import { RoomPinnedEventsEventContent } from 'matrix-js-sdk/lib/types';
+import { useTranslation } from 'react-i18next';
+import { useAtom, useAtomValue } from 'jotai';
 import {
   AvatarBase,
   BubbleLayout,
@@ -79,8 +81,50 @@ import { MemberPowerTag, StateEvent } from '../../../../types/matrix/room';
 import { PowerIcon } from '../../../components/power';
 import colorMXID from '../../../../util/colorMXID';
 import { getPowerTagIconSrc } from '../../../hooks/useMemberPowerTag';
+import { MessageTranslation, getMessagePlainText } from '../../translation';
+import { activeTranslationsAtom, translationAtom } from '../../../state/translation';
 
 export type ReactionHandler = (keyOrMxc: string, shortcode: string) => void;
+
+export const MessageTranslateItem = as<
+  'button',
+  {
+    mEvent: MatrixEvent;
+    onClose?: () => void;
+  }
+>(({ mEvent, onClose, ...props }, ref) => {
+  const { t } = useTranslation();
+  const [activeMap, setActiveMap] = useAtom(activeTranslationsAtom);
+  const eventId = mEvent.getId();
+  const isActive = eventId ? !!activeMap[eventId] : false;
+  const canTranslate = !!getMessagePlainText(mEvent);
+
+  const handleToggle = () => {
+    if (!eventId) return;
+    setActiveMap({
+      ...activeMap,
+      [eventId]: !isActive,
+    });
+    onClose?.();
+  };
+
+  if (!canTranslate) return null;
+
+  return (
+    <MenuItem
+      size="300"
+      after={<Icon size="100" src={Icons.Globe} />}
+      radii="300"
+      onClick={handleToggle}
+      {...props}
+      ref={ref}
+    >
+      <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
+        {isActive ? t('message.show_original') : t('message.translate')}
+      </Text>
+    </MenuItem>
+  );
+});
 
 type MessageQuickReactionsProps = {
   onReaction: ReactionHandler;
@@ -130,6 +174,7 @@ export const MessageAllReactionItem = as<
     onClose?: () => void;
   }
 >(({ room, relations, onClose, ...props }, ref) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const handleClose = () => {
@@ -176,7 +221,7 @@ export const MessageAllReactionItem = as<
         aria-pressed={open}
       >
         <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-          View Reactions
+          {t('message.view_reactions')}
         </Text>
       </MenuItem>
     </>
@@ -191,6 +236,7 @@ export const MessageReadReceiptItem = as<
     onClose?: () => void;
   }
 >(({ room, eventId, onClose, ...props }, ref) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const handleClose = () => {
@@ -226,7 +272,7 @@ export const MessageReadReceiptItem = as<
         aria-pressed={open}
       >
         <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-          Read Receipts
+          {t('message.read_receipts')}
         </Text>
       </MenuItem>
     </>
@@ -241,6 +287,7 @@ export const MessageSourceCodeItem = as<
     onClose?: () => void;
   }
 >(({ room, mEvent, onClose, ...props }, ref) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const getContent = (evt: MatrixEvent) =>
@@ -309,7 +356,7 @@ export const MessageSourceCodeItem = as<
         aria-pressed={open}
       >
         <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-          View Source
+          {t('message.view_source')}
         </Text>
       </MenuItem>
     </>
@@ -325,6 +372,7 @@ export const MessageCopyLinkItem = as<
   }
 >(({ room, mEvent, onClose, ...props }, ref) => {
   const mx = useMatrixClient();
+  const { t } = useTranslation();
 
   const handleCopy = () => {
     const eventId = mEvent.getId();
@@ -343,7 +391,7 @@ export const MessageCopyLinkItem = as<
       ref={ref}
     >
       <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-        Copy Link
+        {t('message.copy_link')}
       </Text>
     </MenuItem>
   );
@@ -358,6 +406,7 @@ export const MessagePinItem = as<
   }
 >(({ room, mEvent, onClose, ...props }, ref) => {
   const mx = useMatrixClient();
+  const { t } = useTranslation();
   const pinnedEvents = useRoomPinnedEvents(room);
   const isPinned = pinnedEvents.includes(mEvent.getId() ?? '');
 
@@ -383,7 +432,7 @@ export const MessagePinItem = as<
       ref={ref}
     >
       <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-        {isPinned ? 'Unpin Message' : 'Pin Message'}
+        {isPinned ? t('message.unpin_message') : t('message.pin_message')}
       </Text>
     </MenuItem>
   );
@@ -398,6 +447,7 @@ export const MessageDeleteItem = as<
   }
 >(({ room, mEvent, onClose, ...props }, ref) => {
   const mx = useMatrixClient();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const [deleteState, deleteMessage] = useAsyncCallback(
@@ -450,7 +500,7 @@ export const MessageDeleteItem = as<
                 size="500"
               >
                 <Box grow="Yes">
-                  <Text size="H4">Delete Message</Text>
+                  <Text size="H4">{t('message.delete_title')}</Text>
                 </Box>
                 <IconButton size="300" onClick={handleClose} radii="300">
                   <Icon src={Icons.Cross} />
@@ -463,9 +513,7 @@ export const MessageDeleteItem = as<
                 direction="Column"
                 gap="400"
               >
-                <Text priority="400">
-                  This action is irreversible! Are you sure that you want to delete this message?
-                </Text>
+                <Text priority="400">{t('message.delete_confirm')}</Text>
                 <Box direction="Column" gap="100">
                   <Text size="L400">
                     Reason{' '}
@@ -491,7 +539,9 @@ export const MessageDeleteItem = as<
                   aria-disabled={deleteState.status === AsyncStatus.Loading}
                 >
                   <Text size="B400">
-                    {deleteState.status === AsyncStatus.Loading ? 'Deleting...' : 'Delete'}
+                    {deleteState.status === AsyncStatus.Loading
+                      ? t('common.deleting')
+                      : t('common.delete')}
                   </Text>
                 </Button>
               </Box>
@@ -511,7 +561,7 @@ export const MessageDeleteItem = as<
         ref={ref}
       >
         <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-          Delete
+          {t('message.delete')}
         </Text>
       </Button>
     </>
@@ -527,6 +577,7 @@ export const MessageReportItem = as<
   }
 >(({ room, mEvent, onClose, ...props }, ref) => {
   const mx = useMatrixClient();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const [reportState, reportMessage] = useAsyncCallback(
@@ -580,7 +631,7 @@ export const MessageReportItem = as<
                 size="500"
               >
                 <Box grow="Yes">
-                  <Text size="H4">Report Message</Text>
+                  <Text size="H4">{t('message.report_title')}</Text>
                 </Box>
                 <IconButton size="300" onClick={handleClose} radii="300">
                   <Icon src={Icons.Cross} />
@@ -645,7 +696,7 @@ export const MessageReportItem = as<
         ref={ref}
       >
         <Text className={css.MessageMenuItemText} as="span" size="T300" truncate>
-          Report
+          {t('message.report')}
         </Text>
       </Button>
     </>
@@ -719,6 +770,7 @@ export const Message = as<'div', MessageProps>(
     ref
   ) => {
     const mx = useMatrixClient();
+    const { t } = useTranslation();
     const useAuthentication = useMediaAuthentication();
     const senderId = mEvent.getSender() ?? '';
 
@@ -829,7 +881,10 @@ export const Message = as<'div', MessageProps>(
             onCancel={() => onEditId()}
           />
         ) : (
-          children
+          <>
+            {children}
+            <MessageTranslation mEvent={mEvent} />
+          </>
         )}
         {reactions}
       </Box>
@@ -998,7 +1053,7 @@ export const Message = as<'div', MessageProps>(
                                 size="T300"
                                 truncate
                               >
-                                Add Reaction
+                                {t('message.add_reaction')}
                               </Text>
                             </MenuItem>
                           )}
@@ -1025,7 +1080,7 @@ export const Message = as<'div', MessageProps>(
                               size="T300"
                               truncate
                             >
-                              Reply
+                              {t('message.reply')}
                             </Text>
                           </MenuItem>
                           {!isThreadedMessage && (
@@ -1045,7 +1100,7 @@ export const Message = as<'div', MessageProps>(
                                 size="T300"
                                 truncate
                               >
-                                Reply in Thread
+                                {t('message.reply_in_thread')}
                               </Text>
                             </MenuItem>
                           )}
@@ -1066,10 +1121,11 @@ export const Message = as<'div', MessageProps>(
                                 size="T300"
                                 truncate
                               >
-                                Edit Message
+                                {t('message.edit_message')}
                               </Text>
                             </MenuItem>
                           )}
+                          <MessageTranslateItem mEvent={mEvent} onClose={closeMenu} />
                           {!hideReadReceipts && (
                             <MessageReadReceiptItem
                               room={room}

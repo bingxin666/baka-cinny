@@ -15,6 +15,7 @@ import {
   Text,
 } from 'folds';
 import FocusTrap from 'focus-trap-react';
+import { useTranslation } from 'react-i18next';
 import { General } from './general';
 import { PageNav, PageNavContent, PageNavHeader, PageRoot } from '../../components/page';
 import { ScreenSize, useScreenSizeContext } from '../../hooks/useScreenSize';
@@ -30,6 +31,7 @@ import { Devices } from './devices';
 import { EmojisStickers } from './emojis-stickers';
 import { DeveloperTools } from './developer-tools';
 import { About } from './about';
+import { TranslationSettings } from './translation';
 import { UseStateProvider } from '../../components/UseStateProvider';
 import { stopPropagation } from '../../utils/keyboard';
 import { LogoutDialog } from '../../components/LogoutDialog';
@@ -41,6 +43,7 @@ export enum SettingsPages {
   DevicesPage,
   EmojisStickersPage,
   DeveloperToolsPage,
+  TranslationPage,
   AboutPage,
 }
 
@@ -50,47 +53,54 @@ type SettingsMenuItem = {
   icon: IconSrc;
 };
 
-const useSettingsMenuItems = (): SettingsMenuItem[] =>
-  useMemo(
+const useSettingsMenuItems = (): SettingsMenuItem[] => {
+  const { t } = useTranslation();
+  return useMemo(
     () => [
       {
         page: SettingsPages.GeneralPage,
-        name: 'General',
+        name: t('settings.general'),
         icon: Icons.Setting,
       },
       {
         page: SettingsPages.AccountPage,
-        name: 'Account',
+        name: t('settings.account'),
         icon: Icons.User,
       },
       {
         page: SettingsPages.NotificationPage,
-        name: 'Notifications',
+        name: t('settings.notifications'),
         icon: Icons.Bell,
       },
       {
         page: SettingsPages.DevicesPage,
-        name: 'Devices',
+        name: t('settings.devices'),
         icon: Icons.Monitor,
       },
       {
         page: SettingsPages.EmojisStickersPage,
-        name: 'Emojis & Stickers',
+        name: t('settings.emojis_stickers'),
         icon: Icons.Smile,
       },
       {
         page: SettingsPages.DeveloperToolsPage,
-        name: 'Developer Tools',
+        name: t('settings.developer_tools'),
         icon: Icons.Terminal,
       },
       {
+        page: SettingsPages.TranslationPage,
+        name: t('settings.translation'),
+        icon: Icons.Globe,
+      },
+      {
         page: SettingsPages.AboutPage,
-        name: 'About',
+        name: t('settings.about'),
         icon: Icons.Info,
       },
     ],
-    []
+    [t]
   );
+};
 
 type SettingsProps = {
   initialPage?: SettingsPages;
@@ -98,6 +108,7 @@ type SettingsProps = {
 };
 export function Settings({ initialPage, requestClose }: SettingsProps) {
   const mx = useMatrixClient();
+  const { t } = useTranslation();
   const useAuthentication = useMediaAuthentication();
   const userId = mx.getUserId()!;
   const profile = useUserProfile(userId);
@@ -136,7 +147,7 @@ export function Settings({ initialPage, requestClose }: SettingsProps) {
                   />
                 </Avatar>
                 <Text size="H4" truncate>
-                  Settings
+                  {t('settings.title')}
                 </Text>
               </Box>
               <Box shrink="No">
@@ -184,7 +195,7 @@ export function Settings({ initialPage, requestClose }: SettingsProps) {
                         before={<Icon src={Icons.Power} size="100" />}
                         onClick={() => setLogout(true)}
                       >
-                        <Text size="B400">Logout</Text>
+                        <Text size="B400">{t('common.logout')}</Text>
                       </Button>
                       {logout && (
                         <Overlay open backdrop={<OverlayBackdrop />}>
@@ -227,6 +238,9 @@ export function Settings({ initialPage, requestClose }: SettingsProps) {
       )}
       {activePage === SettingsPages.DeveloperToolsPage && (
         <DeveloperTools requestClose={handlePageRequestClose} />
+      )}
+      {activePage === SettingsPages.TranslationPage && (
+        <TranslationSettings requestClose={handlePageRequestClose} />
       )}
       {activePage === SettingsPages.AboutPage && <About requestClose={handlePageRequestClose} />}
     </PageRoot>

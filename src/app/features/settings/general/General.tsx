@@ -29,6 +29,7 @@ import {
 } from 'folds';
 import { isKeyHotkey } from 'is-hotkey';
 import FocusTrap from 'focus-trap-react';
+import { useTranslation } from 'react-i18next';
 import { Page, PageContent, PageHeader } from '../../../components/page';
 import { SequenceCard } from '../../../components/sequence-card';
 import { useSetting } from '../../../state/hooks/settings';
@@ -50,6 +51,8 @@ import { useMessageLayoutItems } from '../../../hooks/useMessageLayout';
 import { useMessageSpacingItems } from '../../../hooks/useMessageSpacing';
 import { useDateFormatItems } from '../../../hooks/useDateFormat';
 import { SequenceCardStyle } from '../styles.css';
+import { findLanguage, SUPPORTED_LANGUAGES } from '../../../i18n-config';
+import { changeAppLanguage } from '../../../i18n';
 
 type ThemeSelectorProps = {
   themeNames: Record<string, string>;
@@ -135,6 +138,89 @@ function SelectTheme({ disabled }: { disabled?: boolean }) {
         }
       />
     </>
+  );
+}
+
+function SelectLanguage() {
+  const { t, i18n } = useTranslation();
+  const [menuCords, setMenuCords] = useState<RectCords>();
+  const current = findLanguage(i18n.resolvedLanguage || 'en');
+
+  const handleMenu: MouseEventHandler<HTMLButtonElement> = (evt) => {
+    setMenuCords(evt.currentTarget.getBoundingClientRect());
+  };
+
+  const handleSelect = async (code: string) => {
+    await changeAppLanguage(code);
+    setMenuCords(undefined);
+  };
+
+  return (
+    <>
+      <Button
+        size="300"
+        variant="Secondary"
+        outlined
+        fill="Soft"
+        radii="300"
+        after={<Icon size="300" src={Icons.ChevronBottom} />}
+        onClick={handleMenu}
+      >
+        <Text size="T300">{current.nativeName}</Text>
+      </Button>
+      <PopOut
+        anchor={menuCords}
+        offset={5}
+        position="Bottom"
+        align="End"
+        content={
+          <FocusTrap
+            focusTrapOptions={{
+              initialFocus: false,
+              onDeactivate: () => setMenuCords(undefined),
+              clickOutsideDeactivates: true,
+              isKeyForward: (evt: KeyboardEvent) =>
+                evt.key === 'ArrowDown' || evt.key === 'ArrowRight',
+              isKeyBackward: (evt: KeyboardEvent) =>
+                evt.key === 'ArrowUp' || evt.key === 'ArrowLeft',
+              escapeDeactivates: stopPropagation,
+            }}
+          >
+            <Menu>
+              <Box direction="Column" gap="100" style={{ padding: config.space.S100 }}>
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <MenuItem
+                    key={lang.code}
+                    size="300"
+                    variant={lang.code === current.code ? 'Primary' : 'Surface'}
+                    radii="300"
+                    onClick={() => handleSelect(lang.code)}
+                  >
+                    <Text size="T300">{lang.nativeName}</Text>
+                  </MenuItem>
+                ))}
+              </Box>
+            </Menu>
+          </FocusTrap>
+        }
+      />
+    </>
+  );
+}
+
+function LanguageSection() {
+  const { t } = useTranslation();
+  return (
+    <Box direction="Column" gap="100">
+      <Text size="L400">{t('general.language')}</Text>
+      <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
+        <SettingTile
+          title={t('general.language')}
+          description={t('general.language_desc')}
+          after={<SelectLanguage />}
+        />
+      </SequenceCard>
+    </Box>
   );
 }
 
@@ -304,13 +390,14 @@ function PageZoomInput() {
 }
 
 function Appearance() {
+  const { t } = useTranslation();
   const [systemTheme, setSystemTheme] = useSetting(settingsAtom, 'useSystemTheme');
   const [monochromeMode, setMonochromeMode] = useSetting(settingsAtom, 'monochromeMode');
   const [twitterEmoji, setTwitterEmoji] = useSetting(settingsAtom, 'twitterEmoji');
 
   return (
     <Box direction="Column" gap="100">
-      <Text size="L400">Appearance</Text>
+      <Text size="L400">{t('general.appearance')}</Text>
       <SequenceCard
         className={SequenceCardStyle}
         variant="SurfaceVariant"
@@ -318,8 +405,8 @@ function Appearance() {
         gap="400"
       >
         <SettingTile
-          title="System Theme"
-          description="Choose between light and dark theme based on system preference."
+          title={t('general.system_theme')}
+          description={t('general.system_theme_desc')}
           after={<Switch variant="Primary" value={systemTheme} onChange={setSystemTheme} />}
         />
         {systemTheme && <SystemThemePreferences />}
@@ -327,28 +414,28 @@ function Appearance() {
 
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Theme"
-          description="Theme to use when system theme is not enabled."
+          title={t('general.theme')}
+          description={t('general.theme_desc')}
           after={<SelectTheme disabled={systemTheme} />}
         />
       </SequenceCard>
 
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Monochrome Mode"
+          title={t('general.monochrome')}
           after={<Switch variant="Primary" value={monochromeMode} onChange={setMonochromeMode} />}
         />
       </SequenceCard>
 
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Twitter Emoji"
+          title={t('general.twitter_emoji')}
           after={<Switch variant="Primary" value={twitterEmoji} onChange={setTwitterEmoji} />}
         />
       </SequenceCard>
 
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
-        <SettingTile title="Page Zoom" after={<PageZoomInput />} />
+        <SettingTile title={t('general.page_zoom')} after={<PageZoomInput />} />
       </SequenceCard>
     </Box>
   );
@@ -688,14 +775,15 @@ function SelectDateFormat() {
 }
 
 function DateAndTime() {
+  const { t } = useTranslation();
   const [hour24Clock, setHour24Clock] = useSetting(settingsAtom, 'hour24Clock');
 
   return (
     <Box direction="Column" gap="100">
-      <Text size="L400">Date & Time</Text>
+      <Text size="L400">{t('general.date_time')}</Text>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="24-Hour Time Format"
+          title={t('general.hour24')}
           after={<Switch variant="Primary" value={hour24Clock} onChange={setHour24Clock} />}
         />
       </SequenceCard>
@@ -708,32 +796,33 @@ function DateAndTime() {
 }
 
 function Editor() {
+  const { t } = useTranslation();
   const [enterForNewline, setEnterForNewline] = useSetting(settingsAtom, 'enterForNewline');
   const [isMarkdown, setIsMarkdown] = useSetting(settingsAtom, 'isMarkdown');
   const [hideActivity, setHideActivity] = useSetting(settingsAtom, 'hideActivity');
 
   return (
     <Box direction="Column" gap="100">
-      <Text size="L400">Editor</Text>
+      <Text size="L400">{t('general.editor')}</Text>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="ENTER for Newline"
-          description={`Use ${
-            isMacOS() ? KeySymbol.Command : 'Ctrl'
-          } + ENTER to send message and ENTER for newline.`}
+          title={t('general.enter_newline')}
+          description={t('general.enter_newline_desc', {
+            key: isMacOS() ? KeySymbol.Command : 'Ctrl',
+          })}
           after={<Switch variant="Primary" value={enterForNewline} onChange={setEnterForNewline} />}
         />
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Markdown Formatting"
+          title={t('general.markdown')}
           after={<Switch variant="Primary" value={isMarkdown} onChange={setIsMarkdown} />}
         />
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Hide Typing & Read Receipts"
-          description="Turn off both typing status and read receipts to keep your activity private."
+          title={t('general.hide_activity')}
+          description={t('general.hide_activity_desc')}
           after={<Switch variant="Primary" value={hideActivity} onChange={setHideActivity} />}
         />
       </SequenceCard>
@@ -880,6 +969,7 @@ function SelectMessageSpacing() {
 }
 
 function Messages() {
+  const { t } = useTranslation();
   const [legacyUsernameColor, setLegacyUsernameColor] = useSetting(
     settingsAtom,
     'legacyUsernameColor'
@@ -899,16 +989,16 @@ function Messages() {
 
   return (
     <Box direction="Column" gap="100">
-      <Text size="L400">Messages</Text>
+      <Text size="L400">{t('general.messages')}</Text>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
-        <SettingTile title="Message Layout" after={<SelectMessageLayout />} />
+        <SettingTile title={t('general.message_layout')} after={<SelectMessageLayout />} />
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
-        <SettingTile title="Message Spacing" after={<SelectMessageSpacing />} />
+        <SettingTile title={t('general.message_spacing')} after={<SelectMessageSpacing />} />
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Legacy Username Color"
+          title={t('general.legacy_username')}
           after={
             <Switch
               variant="Primary"
@@ -920,7 +1010,7 @@ function Messages() {
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Hide Membership Change"
+          title={t('general.hide_membership')}
           after={
             <Switch
               variant="Primary"
@@ -932,7 +1022,7 @@ function Messages() {
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Hide Profile Change"
+          title={t('general.hide_profile')}
           after={
             <Switch
               variant="Primary"
@@ -944,7 +1034,7 @@ function Messages() {
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Disable Media Auto Load"
+          title={t('general.disable_media_autoload')}
           after={
             <Switch
               variant="Primary"
@@ -956,19 +1046,19 @@ function Messages() {
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Url Preview"
+          title={t('general.url_preview')}
           after={<Switch variant="Primary" value={urlPreview} onChange={setUrlPreview} />}
         />
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Url Preview in Encrypted Room"
+          title={t('general.url_preview_enc')}
           after={<Switch variant="Primary" value={encUrlPreview} onChange={setEncUrlPreview} />}
         />
       </SequenceCard>
       <SequenceCard className={SequenceCardStyle} variant="SurfaceVariant" direction="Column">
         <SettingTile
-          title="Show Hidden Events"
+          title={t('general.show_hidden_events')}
           after={
             <Switch variant="Primary" value={showHiddenEvents} onChange={setShowHiddenEvents} />
           }
@@ -982,13 +1072,14 @@ type GeneralProps = {
   requestClose: () => void;
 };
 export function General({ requestClose }: GeneralProps) {
+  const { t } = useTranslation();
   return (
     <Page>
       <PageHeader outlined={false}>
         <Box grow="Yes" gap="200">
           <Box grow="Yes" alignItems="Center" gap="200">
             <Text size="H3" truncate>
-              General
+              {t('settings.general')}
             </Text>
           </Box>
           <Box shrink="No">
@@ -1002,6 +1093,7 @@ export function General({ requestClose }: GeneralProps) {
         <Scroll hideTrack visibility="Hover">
           <PageContent>
             <Box direction="Column" gap="700">
+              <LanguageSection />
               <Appearance />
               <DateAndTime />
               <Editor />

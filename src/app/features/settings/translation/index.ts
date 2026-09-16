@@ -1,0 +1,1 @@
+export { TranslationSettings } from './TranslationSettings';

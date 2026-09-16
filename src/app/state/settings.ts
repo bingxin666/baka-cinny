@@ -26,6 +26,8 @@ export interface Settings {
   twitterEmoji: boolean;
   pageZoom: number;
   hideActivity: boolean;
+  /** App UI language code (e.g. zh-CN). Managed by i18n as well. */
+  language?: string;
 
   isPeopleDrawer: boolean;
   memberSortFilterIndex: number;
@@ -97,9 +99,9 @@ export const setSettings = (settings: Settings) => {
 };
 
 const baseSettings = atom<Settings>(getSettings());
-export const settingsAtom = atom<Settings, [Settings], undefined>(
+export const settingsAtom = atom(
   (get) => get(baseSettings),
-  (get, set, update) => {
+  (get, set, update: Settings) => {
     set(baseSettings, update);
     setSettings(update);
   }
